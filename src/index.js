@@ -1,12 +1,8 @@
+import axios from 'axios';
 import SlimSelect from 'slim-select';
 import 'slim-select/dist/slimselect.css';
-import { fetchBreeds, fetchCatByBreed } from './js/cats-api';
 import { Report } from 'notiflix/build/notiflix-report-aio';
-import axios from 'axios';
-
-axios.defaults.baseURL = 'https://api.thecatapi.com/v1';
-axios.defaults.headers.common['x-api-key'] =
-  'live_32QuEtSUa4B1mBDYZcQ5jGz3DaJl5LlsKHCv42KCYUzXQiHOoAVCQBpMPmosGqYV';
+import { fetchBreeds, fetchCatByBreed } from './js/cat-api';
 
 const breedSelect = document.querySelector('.breed-select');
 const loader = document.querySelector('.loader');
@@ -14,13 +10,11 @@ const loader = document.querySelector('.loader');
 breedSelect.addEventListener('change', onSelect);
 const catInfo = document.querySelector('.cat-info');
 
-// create function to choose exact breed of cat
-function onSelect(event) {
+function onSelect(e) {
   catInfo.innerHTML = '';
-  loader.style.display = 'block';
-  fetchCatByBreed(event.currentTarget.value)
-    .then(resp => {
-      catInfo.innerHTML = createMarkupCatCard(resp.data);
+  fetchCatByBreed(e.currentTarget.value)
+    .then(response => {
+      catInfo.innerHTML = createMarkupCatCard(response.data);
     })
     .catch(function (error) {
       onError();
@@ -28,16 +22,10 @@ function onSelect(event) {
       console.log(error);
     })
     .finally(function () {
-      loader.style.display = 'none'; // always executed
+      loader.style.display = 'none';
     });
 }
 
-// setTimeout to show select when all list of breeds came
-setTimeout(() => {
-  breedSelect.style.display = 'block';
-}, 0);
-
-// create function to get list of all breeds
 fetchBreeds()
   .then(response => {
     const storedBreeds = response.data;
@@ -46,41 +34,35 @@ fetchBreeds()
   })
   .catch(function (error) {
     onError();
-    // handle error
-    console.log(error);
   })
   .finally(function () {
     loader.style.display = 'none';
   });
 
-// create markup for breed list
-function createMarkupSelect(arr) {
-  return arr
+function createMarkupSelect(array) {
+  return array
     .map(({ id, name }) => `<option value="${id}">${name}</option>`)
     .join('');
 }
 
-// create murkup for one breed
-function createMarkupCatCard(arr) {
-  const url = arr[0].url;
-  const description = arr[0].breeds[0].description;
+function createMarkupCatCard(array) {
+  const url = array[0].url;
+  const description = array[0].breeds[0].description;
   return `<img
         src="${url}"
         alt=""
-        width="480px"
+        width="100%"
       />
       <p>
         ${description}
       </p>`;
 }
-// create new beautiful select element
 function slim() {
   new SlimSelect({
-    select: '#breed-select',
+    select: '.breed-select',
   });
 }
 
-// function for error handling
 function onError() {
-  Report.failure('Okay', 'Oops! Something went wrong! Try reloading the page!');
+  Report.failure('Oops', 'Something went wrong! Try reloading the page!', 'OK');
 }
